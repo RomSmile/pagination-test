@@ -5,7 +5,7 @@ project [test-pagination](https://github.com/RomSmile/pagination-test).
 
 First, run the development server:
 
-## Create your Env file
+## Create your .env file
 
 | Parameter      | Description                  |
 |:---------------|:-----------------------------|
