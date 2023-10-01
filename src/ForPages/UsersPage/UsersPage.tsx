@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Spinner } from '@/components';
+import { CenteredErrorMessage, Spinner } from '@/components';
 import UsersList from '@/ForPages/UsersPage/components/UsersList';
 import { useRouter } from 'next/router';
 import { useAppDispatch, useAppSelector } from '@/hooks/redux';
@@ -79,7 +79,7 @@ const UsersPage = () => {
             pageSize={pagination.limit}
           />
         ) : (
-          <div>We don't have any options</div>
+          <CenteredErrorMessage message={"We don't have any options"} />
         )}
       </ListContainer>
     </>
