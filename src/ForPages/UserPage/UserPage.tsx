@@ -1,13 +1,12 @@
 'use client';
-import { FC, useState } from 'react';
+import { FC, useMemo, useState } from 'react';
 import { IUserPage } from './types';
 import { Button, message, Steps, Typography } from 'antd';
-import { Container, StepsContainer } from './styled';
+import { ButtonsContainer, Container, StepsContainer } from './styled';
 import { emailRegex, steps } from './defaultValues';
 import { IUser } from '@/types/interfaces';
 import UsersService from '@/services/UsersService';
 import { useRouter } from 'next/router';
-import { toast } from 'react-toastify';
 
 const { Title } = Typography;
 
@@ -15,6 +14,7 @@ const UserPage: FC<IUserPage> = ({ user }) => {
   const router = useRouter();
   const [newUser, setNewUser] = useState<IUser>(user);
   const [currentStep, setCurrentStep] = useState<number>(0);
+
   const next = async () => {
     const inputName = steps[currentStep].name;
 
@@ -37,16 +37,17 @@ const UserPage: FC<IUserPage> = ({ user }) => {
     setCurrentStep(currentStep - 1);
   };
 
-  const items = steps.map((step) => {
-    return { ...step };
-  });
+  const stepItems = useMemo(() => {
+    return steps.map((step) => {
+      return { ...step };
+    });
+  }, []);
 
   const CurrentComponent = steps[currentStep].children;
 
   const editUser = async () => {
     const response = await UsersService.editUser(newUser);
     if (response.status === 200) {
-      toast.success('Success save');
       await router.push('/users');
     }
   };
@@ -57,7 +58,7 @@ const UserPage: FC<IUserPage> = ({ user }) => {
         <Title level={2}>{steps[currentStep].title}</Title>
         <CurrentComponent newUser={newUser} setNewUser={setNewUser} />
 
-        <div style={{ marginTop: 24 }}>
+        <ButtonsContainer>
           {currentStep < steps.length - 1 && (
             <Button type="primary" onClick={next}>
               Next
@@ -73,10 +74,10 @@ const UserPage: FC<IUserPage> = ({ user }) => {
               Previous
             </Button>
           )}
-        </div>
+        </ButtonsContainer>
       </Container>
       <StepsContainer>
-        <Steps current={currentStep} items={items} />
+        <Steps current={currentStep} items={stepItems} />
       </StepsContainer>
     </>
   );

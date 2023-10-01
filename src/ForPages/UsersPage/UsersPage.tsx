@@ -5,50 +5,83 @@ import UsersList from '@/ForPages/UsersPage/components/UsersList';
 import { useRouter } from 'next/router';
 import { useAppDispatch, useAppSelector } from '@/hooks/redux';
 import { getPaginatedUsers } from '@/store/UsersPagination/actions/getPaginatedUsers';
+import Filters from '@/ForPages/UsersPage/components/Filters';
+import { ListContainer } from '@/ForPages/UsersPage/styled';
+import { GenderEnum } from '@/types/Enums';
+import { useDebounce } from '@/hooks/useDebounce';
 
 const UsersPage = () => {
   const {
-    query: { page },
+    query: { page, gender, search },
     isReady,
     replace,
   } = useRouter();
   const [pageNumber, setPageNumber] = useState(null);
+  const [searchValue, setSearchValue] = useState<string>('');
+  const { debouncedValue, onSetDebounceValue } = useDebounce(searchValue, 500);
+  const [genderValue, setGenderValue] = useState<GenderEnum | null>(null);
   const dispatch = useAppDispatch();
   const { users, pagination, isLoading } = useAppSelector((state) => state.paginationReducer);
   const getUsers = async (): Promise<void> => {
-    dispatch(getPaginatedUsers(pageNumber));
+    dispatch(getPaginatedUsers({ pageNumber, searchValue: debouncedValue, genderValue }));
 
-    await replace({ query: { page: pageNumber } });
+    await replace({
+      query: {
+        page: pageNumber,
+        ...(debouncedValue.length && { search: debouncedValue }),
+        ...(genderValue !== null ? { gender: genderValue } : {}),
+      },
+    });
   };
 
   useEffect(() => {
     if (pageNumber) {
-      getUsers();
+      (async () => {
+        await getUsers();
+      })();
     }
-  }, [pageNumber]);
+  }, [pageNumber, debouncedValue, genderValue]);
 
   useEffect(() => {
-    if (isReady && !isNaN(Number(page)) && Boolean(page)) {
-      setPageNumber(Number(page));
-    } else if (isReady) {
-      setPageNumber(1);
+    if (isReady) {
+      !isNaN(Number(page)) && Boolean(page) ? setPageNumber(Number(page)) : setPageNumber(1);
+
+      if (Number(gender) === GenderEnum.male || Number(gender) === GenderEnum.female) {
+        setGenderValue(Number(gender));
+      } else {
+        setGenderValue(null);
+      }
+      if (search) {
+        setSearchValue(search as string);
+        onSetDebounceValue(search as string);
+      } else {
+        setSearchValue('');
+      }
     }
   }, [isReady]);
 
   return (
     <>
       <Spinner loading={isLoading} />
-      {pagination ? (
-        <UsersList
-          users={users}
-          setPageNumber={setPageNumber}
-          currentPage={pageNumber}
-          totalAmount={pagination.total}
-          pageSize={pagination.limit}
+      <ListContainer>
+        <Filters
+          searchValue={searchValue}
+          genderValue={genderValue}
+          setGenderValue={setGenderValue}
+          setSearchValue={setSearchValue}
         />
-      ) : (
-        <div style={{ color: '#fff' }}>We do&aposnot have any options</div>
-      )}
+        {pagination ? (
+          <UsersList
+            users={users}
+            setPageNumber={setPageNumber}
+            currentPage={pageNumber}
+            totalAmount={pagination.total}
+            pageSize={pagination.limit}
+          />
+        ) : (
+          <div>We don't have any options</div>
+        )}
+      </ListContainer>
     </>
   );
 };

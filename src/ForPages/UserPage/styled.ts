@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { Select } from 'antd';
+import { Input, Select } from 'antd';
 
 export const Container = styled.div`
   max-width: 1080px;
@@ -22,10 +22,18 @@ export const StyledSelect = styled(Select)`
   }
 `;
 
+export const StyledInput = styled(Input)`
+  width: 320px;
+`;
+
 export const StepsContainer = styled.div`
   max-width: 1080px;
   width: 100%;
   padding: 10px 15px;
   margin: 10px auto 0;
   background-color: #fff;
+`;
+
+export const ButtonsContainer = styled.div`
+  margin-top: 24px;
 `;

@@ -1,5 +1,5 @@
 import ApiService from '@/services/ApiService';
-import { IUsersPaginatedResponse } from '@/services/types/TypesUserService';
+import { IGetPaginatedUsersRequest, IUsersPaginatedResponse } from '@/services/types/TypesUserService';
 import { IUser } from '@/types/interfaces';
 import { GenderEnum, StatusEnum } from '@/types/Enums';
 import { toast } from 'react-toastify';
@@ -9,8 +9,16 @@ class UsersService extends ApiService {
     super(baseUrl);
   }
 
-  async getPaginatedUsers(page: number): Promise<IUsersPaginatedResponse> {
-    const response = await this.requester(`${this.baseUrl}v1/users?page=${page}`);
+  async getPaginatedUsers({
+    pageNumber,
+    searchValue,
+    genderValue,
+  }: IGetPaginatedUsersRequest): Promise<IUsersPaginatedResponse> {
+    const response = await this.requester(
+      `${this.baseUrl}v1/users?page=${pageNumber}${searchValue.length ? `&name=${searchValue}` : ''}${
+        genderValue !== null ? `&gender=${GenderEnum[genderValue]}` : ''
+      }`,
+    );
     return response.data;
   }
 
@@ -28,11 +36,15 @@ class UsersService extends ApiService {
         method: 'PATCH',
         data: {
           ...user,
-          status: user.status === 0 || user.status === 1 ? StatusEnum[user.status] : user.status,
-          gender: user.gender === 0 || user.gender === 1 ? GenderEnum[user.gender] : user.gender,
+          status: Number.isInteger(user.status) ? StatusEnum[user.status] : user.status,
+          gender: Number.isInteger(user.gender) ? GenderEnum[user.gender] : user.gender,
         },
         headers: this.getHeaders(),
       });
+
+      if (response.status === 200) {
+        toast.success('Success save');
+      }
 
       return response;
     } catch (e) {
